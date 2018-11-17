@@ -1,2 +1,2 @@
-# micronaut-grpc
-gRPC support for Micronaut
+# [gRPC](http://grpc.io) server support for [Micronaut](http://micronaut.io/)
+
