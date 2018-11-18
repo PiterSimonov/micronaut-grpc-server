@@ -18,8 +18,9 @@ package com.enegate.micronaut.grpc.server.test
 
 import com.enegate.micronaut.grpc.server.GrpcServer
 import io.micronaut.context.ApplicationContext
+import io.micronaut.core.io.socket.SocketUtils
 import io.micronaut.runtime.EmbeddedApplication
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.*
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.gherkin.Feature
 
@@ -35,6 +36,11 @@ object GrpcServerFeature : Spek({
             Then("it should run") {
                 assertEquals(true, grpcServer.isRunning)
             }
+
+            Then("it should listen on a tcp port") {
+                // TODO: read from config
+                assertFalse(SocketUtils.isTcpPortAvailable(9090))
+            }
         }
 
         Scenario("stop grpc server") {
@@ -44,6 +50,12 @@ object GrpcServerFeature : Spek({
 
             Then("it should not run") {
                 assertEquals(false, grpcServer.isRunning)
+            }
+
+            Then("it should not listen on a tcp port") {
+                Thread.sleep(1000)
+                // TODO: read from config
+                assertTrue(SocketUtils.isTcpPortAvailable(9090))
             }
         }
     }

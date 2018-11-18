@@ -16,9 +16,11 @@
 
 package com.enegate.micronaut.grpc.server
 
+import io.grpc.BindableService
 import io.grpc.Server
 import io.grpc.ServerBuilder
 import io.micronaut.context.ApplicationContext
+import io.micronaut.context.annotation.Bean
 import io.micronaut.core.annotation.Internal
 import io.micronaut.core.io.socket.SocketUtils
 import io.micronaut.runtime.ApplicationConfiguration
@@ -29,6 +31,9 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Singleton
 import kotlin.concurrent.thread
+
+@Bean
+annotation class GrpcService
 
 @Singleton
 @Internal
@@ -51,6 +56,20 @@ class GrpcServer(val applContext: ApplicationContext, val applConfiguration: App
         if (isRunning) return this
 
         val builder = ServerBuilder.forPort(serverPort)
+
+        for (beanDef in applContext.allBeanDefinitions) {
+            if (!beanDef.hasAnnotation(GrpcService::class.java))
+                continue
+            if (!BindableService::class.java.isAssignableFrom(beanDef.beanType))
+                continue
+            val bean = applContext.getBean(beanDef.beanType) as BindableService
+            val serviceDef = bean.bindService()
+            builder.addService(serviceDef)
+            LOG.info("Adding gRPC service: ${serviceDef.serviceDescriptor.name}")
+            if (LOG.isDebugEnabled)
+                LOG.debug("gRPC service [${serviceDef.serviceDescriptor.name}] is implemented in class [${beanDef.name}]")
+        }
+
         server = builder.build().start()
 
         thread { server.awaitTermination() }
