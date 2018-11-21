@@ -16,9 +16,7 @@
 
 package com.enegate.micronaut.grpc.server
 
-import io.grpc.BindableService
-import io.grpc.Server
-import io.grpc.ServerBuilder
+import io.grpc.*
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Bean
 import io.micronaut.core.annotation.Internal
@@ -31,9 +29,17 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Singleton
 import kotlin.concurrent.thread
+import kotlin.reflect.KClass
 
+@Target(AnnotationTarget.CLASS)
+@Retention
 @Bean
-annotation class GrpcService
+annotation class GrpcService(val interceptors: Array<KClass<out ServerInterceptor>> = emptyArray())
+
+@Target(AnnotationTarget.CLASS)
+@Retention
+@Bean
+annotation class GrpcInterceptor(val global: Boolean = false)
 
 @Singleton
 @Internal
@@ -57,18 +63,56 @@ class GrpcServer(val applContext: ApplicationContext, val applConfiguration: App
 
         val builder = ServerBuilder.forPort(serverPort)
 
-        for (beanDef in applContext.allBeanDefinitions) {
-            if (!beanDef.hasAnnotation(GrpcService::class.java))
-                continue
-            if (!BindableService::class.java.isAssignableFrom(beanDef.beanType))
-                continue
-            val bean = applContext.getBean(beanDef.beanType) as BindableService
-            val serviceDef = bean.bindService()
-            builder.addService(serviceDef)
-            LOG.info("Adding gRPC service: ${serviceDef.serviceDescriptor.name}")
-            if (LOG.isDebugEnabled)
-                LOG.debug("gRPC service [${serviceDef.serviceDescriptor.name}] is implemented in class [${beanDef.name}]")
-        }
+        //Find global interceptors
+        val globalInterceptors = mutableListOf<ServerInterceptor>()
+        applContext.getBeanDefinitions(ServerInterceptor::class.java)
+                .filter { it.hasAnnotation(GrpcInterceptor::class.java) }
+                .forEach { interceptorBeanDef ->
+                    val grpcInterceptorAnno = interceptorBeanDef.getAnnotation<GrpcInterceptor>(GrpcInterceptor::class.java)
+                    if (grpcInterceptorAnno != null) {
+                        val isGlobal = grpcInterceptorAnno.get("global", Boolean::class.java)
+                        if (isGlobal.isPresent && isGlobal.get()) {
+                            val interceptorBean = applContext.getBean(interceptorBeanDef.beanType) as ServerInterceptor
+                            globalInterceptors.add(interceptorBean)
+                        }
+                    }
+                }
+        globalInterceptors.forEach { LOG.info("Adding global interceptor: ${it.javaClass.name}") }
+
+        //Find services
+        applContext.getBeanDefinitions(BindableService::class.java)
+                .filter { it.hasAnnotation(GrpcService::class.java) }
+                .forEach { beanDef ->
+                    val bean = applContext.getBean(beanDef.beanType) as BindableService
+
+                    //Find service interceptors
+                    val interceptors = mutableListOf<ServerInterceptor>()
+                    val grpcServiceAnnotation = beanDef.synthesize<GrpcService>(GrpcService::class.java)
+                    for (interceptor in grpcServiceAnnotation.interceptors) {
+                        val type = interceptor.javaObjectType
+                        if (!ServerInterceptor::class.java.isAssignableFrom(type))
+                            continue
+                        val interceptorBeanDef = applContext.getBeanDefinition(type)
+                        val grpcInterceptorAnno = interceptorBeanDef.getAnnotation<GrpcInterceptor>(GrpcInterceptor::class.java)
+                        if (grpcInterceptorAnno != null) {
+                            val isGlobal = grpcInterceptorAnno.get("global", Boolean::class.java)
+                            if (isGlobal.isPresent && isGlobal.get())
+                                continue
+                        }
+                        val interceptorBean = applContext.getBean(interceptorBeanDef.beanType) as ServerInterceptor
+                        interceptors.add(interceptorBean)
+                    }
+
+                    val serviceDef = ServerInterceptors.intercept(bean, globalInterceptors + interceptors)
+
+                    //Add service
+                    builder.addService(serviceDef)
+                    LOG.info("Adding gRPC service: ${serviceDef.serviceDescriptor.name}")
+                    interceptors.forEach { LOG.info("Adding interceptor for ${serviceDef.serviceDescriptor.name}: ${it.javaClass.name}") }
+
+                    if (LOG.isDebugEnabled)
+                        LOG.debug("gRPC service [${serviceDef.serviceDescriptor.name}] is implemented in class [${beanDef.name}]")
+                }
 
         server = builder.build().start()
 
@@ -92,7 +136,7 @@ class GrpcServer(val applContext: ApplicationContext, val applConfiguration: App
                 }
             } catch (e: Throwable) {
                 if (LOG.isErrorEnabled) {
-                    LOG.error("Error stopping Micronaut gRPC server: " + e.message, e)
+                    LOG.error("Error stopping gRPC server: " + e.message, e)
                 }
             }
         }
