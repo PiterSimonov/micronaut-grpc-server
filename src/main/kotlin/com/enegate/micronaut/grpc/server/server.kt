@@ -115,7 +115,7 @@ class GrpcServer(val applContext: ApplicationContext, val applConfiguration: App
                     builder.addService(serviceDef)
                     LOG.info("Adding gRPC service: ${serviceDef.serviceDescriptor.name}")
                     interceptors.forEach {
-                        LOG.info("Adding gRPC interceptor for ${serviceDef.serviceDescriptor.name}: ${it.javaClass.simpleName}")
+                        LOG.info("Adding gRPC interceptor for service ${serviceDef.serviceDescriptor.name}: ${it.javaClass.simpleName}")
                         if (LOG.isDebugEnabled)
                             LOG.debug("gRPC interceptor [${it.javaClass.simpleName}] is implemented in class [${it.javaClass.name}]")
                     }
