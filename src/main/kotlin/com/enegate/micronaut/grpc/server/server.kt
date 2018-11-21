@@ -87,6 +87,8 @@ class GrpcServer(val applContext: ApplicationContext, val applConfiguration: App
 
                     //Find service interceptors
                     val interceptors = mutableListOf<ServerInterceptor>()
+                    //TODO: Find a solution without synthesize()
+                    // https://docs.micronaut.io/latest/guide/index.html#annotationMetadata
                     val grpcServiceAnnotation = beanDef.synthesize<GrpcService>(GrpcService::class.java)
                     for (interceptor in grpcServiceAnnotation.interceptors) {
                         val type = interceptor.javaObjectType
