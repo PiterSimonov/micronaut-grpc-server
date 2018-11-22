@@ -1,11 +1,12 @@
 package com.enegate.micronaut.grpc.server;
 
+import com.enegate.micronaut.grpc.server.annotation.GrpcInterceptor;
+import com.enegate.micronaut.grpc.server.annotation.GrpcService;
 import io.grpc.*;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.event.ShutdownEvent;
 import io.micronaut.context.event.StartupEvent;
 import io.micronaut.core.annotation.AnnotationValue;
-import io.micronaut.inject.BeanDefinition;
 import io.micronaut.runtime.event.annotation.EventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Singleton;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
