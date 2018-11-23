@@ -27,6 +27,24 @@ dependencies {
 ````
 
 ### gRPC server
+Prerequisite: [Generate](https://github.com/google/protobuf-gradle-plugin) artifacts from your Protocol Buffer ``.proto`` definition files
+
+Extract from an example .proto file:
+
+````proto
+service Greeter {
+  rpc SayHello (HelloRequest) returns (HelloReply) {}
+}
+
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloReply {
+  string message = 1;
+}
+````
+
 Annotate your server interface implementation with ``@com.enegate.micronaut.grpc.server.annotation.GrpcService``
 
 ````java
