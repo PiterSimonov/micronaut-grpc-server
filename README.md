@@ -4,6 +4,7 @@ This project is inspired by the [Spring boot starter for gRPC](https://github.co
 ## Features
 - Configures and runs the embedded gRPC server
 - Global and per service interceptors
+- Fast startup time
 
 ## Usage
 
@@ -29,7 +30,7 @@ dependencies {
 ### gRPC server
 Prerequisite: [Generate](https://github.com/google/protobuf-gradle-plugin) artifacts from your Protocol Buffer ``.proto`` definition files
 
-Extract from an example .proto file:
+Extract from an example ``.proto`` file:
 
 ````proto
 service Greeter {
