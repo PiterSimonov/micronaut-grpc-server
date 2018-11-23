@@ -75,7 +75,7 @@ public class GreeterServiceInterceptor implements ServerInterceptor {
 }
 ````
 
-Add the interceptor to the ``@GrpcService`` annotation of your server interface implementation
+Add the interceptor to the array parameter ``interceptors`` of the ``@GrpcService`` annotation  of your server interface implementation
 
 ````java
 @GrpcService(interceptors = {GreeterServiceInterceptor.class})
