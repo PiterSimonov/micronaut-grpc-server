@@ -37,7 +37,7 @@ public class GrpcServerMethodAdapterAdvice {
         ServerBuilder builder = ServerBuilder.forPort(serverPort);
 
         //Find global interceptors
-        ArrayList globalInterceptors = new ArrayList<ServerInterceptor>();
+        ArrayList<ServerInterceptor> globalInterceptors = new ArrayList<>();
         beanContext.getBeanDefinitions(ServerInterceptor.class).stream()
                 .filter(interceptorBeanDef -> interceptorBeanDef.hasAnnotation(GrpcInterceptor.class))
                 .forEach(interceptorBeanDef -> {
@@ -46,7 +46,9 @@ public class GrpcServerMethodAdapterAdvice {
                         Optional<Boolean> isGlobal = grpcInterceptorAnno.get("global", Boolean.class);
                         if (isGlobal.isPresent() && isGlobal.get()) {
                             ServerInterceptor interceptorBean = beanContext.getBean(interceptorBeanDef.getBeanType());
-                            globalInterceptors.add(interceptorBean);
+                            if (interceptorBean != null) {
+                                globalInterceptors.add(interceptorBean);
+                            }
                         }
                     }
                 });
@@ -61,14 +63,16 @@ public class GrpcServerMethodAdapterAdvice {
                 .filter(serviceBeanDef -> serviceBeanDef.hasAnnotation(GrpcService.class))
                 .forEach(serviceBeanDef -> {
                     //Find service interceptors
-                    ArrayList interceptors = new ArrayList<ServerInterceptor>();
+                    ArrayList<ServerInterceptor> interceptors = new ArrayList<>();
                     AnnotationValue<GrpcService> grpcServiceAnno = serviceBeanDef.getAnnotation(GrpcService.class);
                     if (grpcServiceAnno != null) {
                         Optional<Class[]> interceptorsClasses = grpcServiceAnno.get("interceptors", Class[].class);
                         if (interceptorsClasses.isPresent()) {
-                            for (Class aClass : interceptorsClasses.get()) {
-                                ServerInterceptor interceptorBean = (ServerInterceptor) beanContext.getBean(aClass);
-                                interceptors.add(interceptorBean);
+                            for (Class<ServerInterceptor> aClass : interceptorsClasses.get()) {
+                                ServerInterceptor interceptorBean = beanContext.getBean(aClass);
+                                if (interceptorBean != null) {
+                                    interceptors.add(interceptorBean);
+                                }
                             }
                         }
                     }
