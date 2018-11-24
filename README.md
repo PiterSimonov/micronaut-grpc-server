@@ -9,7 +9,6 @@ This project is inspired by the [Spring boot starter for gRPC](https://github.co
 ## Usage
 
 ### Dependencies
-Artifacts are published to maven central.
 
 #### Maven
 ````xml

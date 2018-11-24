@@ -46,7 +46,7 @@ public class GrpcServerMethodAdapterAdvice {
     private Server server = null;
 
     @EventListener
-//    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked")
     public void onStartup(StartupEvent event) throws IOException {
         if (running.get()) return;
 
@@ -105,8 +105,11 @@ public class GrpcServerMethodAdapterAdvice {
                     }
 
                     BindableService serviceBean = beanContext.getBean(serviceBeanDef.getBeanType());
-                    globalInterceptors.addAll(interceptors);
-                    ServerServiceDefinition serviceDef = ServerInterceptors.intercept(serviceBean, globalInterceptors);
+
+                    ArrayList<ServerInterceptor> allInterceptors = new ArrayList<>();
+                    allInterceptors.addAll(globalInterceptors);
+                    allInterceptors.addAll(interceptors);
+                    ServerServiceDefinition serviceDef = ServerInterceptors.intercept(serviceBean, allInterceptors);
 
                     //Add service
                     builder.addService(serviceDef);
