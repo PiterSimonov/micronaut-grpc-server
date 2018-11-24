@@ -9,8 +9,9 @@ This project is inspired by the [Spring boot starter for gRPC](https://github.co
 ## Usage
 
 ### Dependencies
-Add a dependency using Maven:
+Artifacts are published to maven central.
 
+#### Maven
 ````xml
 <dependency>
   <groupId>TBD</groupId>
@@ -19,8 +20,7 @@ Add a dependency using Maven:
 </dependency>
 ````
 
-Add a dependency using Gradle:
-
+#### Gradle
 ````gradle
 dependencies {
   compile 'TBD'
@@ -28,6 +28,10 @@ dependencies {
 ````
 
 ### gRPC server
+
+#### Configuration
+
+#### Implementation
 Prerequisite: [Generate](https://github.com/google/protobuf-gradle-plugin) artifacts from your Protocol Buffer ``.proto`` definition files
 
 Extract from an example ``.proto`` file:

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2018 Enegate
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.enegate.micronaut.grpc.server;
 
 import com.enegate.micronaut.grpc.server.annotation.GrpcInterceptor;
@@ -7,6 +23,7 @@ import io.micronaut.context.BeanContext;
 import io.micronaut.context.event.ShutdownEvent;
 import io.micronaut.context.event.StartupEvent;
 import io.micronaut.core.annotation.AnnotationValue;
+import io.micronaut.inject.BeanDefinition;
 import io.micronaut.runtime.event.annotation.EventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +46,8 @@ public class GrpcServerMethodAdapterAdvice {
     private Server server = null;
 
     @EventListener
-    public void onStartup(StartupEvent event) {
+//    @SuppressWarnings("unchecked")
+    public void onStartup(StartupEvent event) throws IOException {
         if (running.get()) return;
 
         BeanContext beanContext = event.getSource();
@@ -52,12 +70,13 @@ public class GrpcServerMethodAdapterAdvice {
                         }
                     }
                 });
-        globalInterceptors.forEach(si -> {
-            LOG.info("Adding global gRPC interceptor: " + si.getClass().getSimpleName());
-            if (LOG.isDebugEnabled())
-                LOG.debug("Global gRPC interceptor [" + si.getClass().getSimpleName() + "] is implemented in class [" + si.getClass().getName() + "]");
-        });
-
+        if (LOG.isDebugEnabled()) {
+            globalInterceptors.forEach(si -> {
+                LOG.debug("Adding global gRPC interceptor: " + si.getClass().getSimpleName());
+                if (LOG.isTraceEnabled())
+                    LOG.trace("Global gRPC interceptor [" + si.getClass().getSimpleName() + "] is implemented in class [" + si.getClass().getName() + "]");
+            });
+        }
         //Find services
         beanContext.getBeanDefinitions(BindableService.class).stream()
                 .filter(serviceBeanDef -> serviceBeanDef.hasAnnotation(GrpcService.class))
@@ -69,7 +88,15 @@ public class GrpcServerMethodAdapterAdvice {
                         Optional<Class[]> interceptorsClasses = grpcServiceAnno.get("interceptors", Class[].class);
                         if (interceptorsClasses.isPresent()) {
                             for (Class<ServerInterceptor> aClass : interceptorsClasses.get()) {
-                                ServerInterceptor interceptorBean = beanContext.getBean(aClass);
+                                BeanDefinition<ServerInterceptor> interceptorBeanDef = beanContext.getBeanDefinition(aClass);
+                                AnnotationValue<GrpcInterceptor> grpcInterceptorAnno = interceptorBeanDef.getAnnotation(GrpcInterceptor.class);
+                                if (grpcInterceptorAnno != null) {
+                                    Optional<Boolean> isGlobal = grpcInterceptorAnno.get("global", Boolean.class);
+                                    if (isGlobal.isPresent() && isGlobal.get())
+                                        continue;
+                                }
+
+                                ServerInterceptor interceptorBean = beanContext.getBean(interceptorBeanDef.getBeanType());
                                 if (interceptorBean != null) {
                                     interceptors.add(interceptorBean);
                                 }
@@ -78,39 +105,42 @@ public class GrpcServerMethodAdapterAdvice {
                     }
 
                     BindableService serviceBean = beanContext.getBean(serviceBeanDef.getBeanType());
-                    interceptors.addAll(globalInterceptors);
-                    ServerServiceDefinition serviceDef = ServerInterceptors.intercept(serviceBean, interceptors);
+                    globalInterceptors.addAll(interceptors);
+                    ServerServiceDefinition serviceDef = ServerInterceptors.intercept(serviceBean, globalInterceptors);
 
                     //Add service
                     builder.addService(serviceDef);
-                    LOG.info("Adding gRPC service: " + serviceDef.getServiceDescriptor().getName());
-                    interceptors.forEach(si -> {
-                        LOG.info("Adding gRPC interceptor for service " + serviceDef.getServiceDescriptor().getName() + ": " + si.getClass().getSimpleName());
-                        if (LOG.isDebugEnabled())
-                            LOG.debug("gRPC interceptor [" + si.getClass().getSimpleName() + "] is implemented in class [" + si.getClass().getName() + "]");
-                    });
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Adding gRPC service: " + serviceDef.getServiceDescriptor().getName());
+                        interceptors.forEach(si -> {
+                            LOG.debug("Adding gRPC interceptor for service " + serviceDef.getServiceDescriptor().getName() + ": " + si.getClass().getSimpleName());
+                            if (LOG.isTraceEnabled())
+                                LOG.trace("gRPC interceptor [" + si.getClass().getSimpleName() + "] is implemented in class [" + si.getClass().getName() + "]");
+                        });
+                    }
 
-                    if (LOG.isDebugEnabled())
-                        LOG.debug("gRPC service [" + serviceDef.getServiceDescriptor().getName() + "] is implemented in class [" + serviceBeanDef.getName() + "]");
+                    if (LOG.isTraceEnabled())
+                        LOG.trace("gRPC service [" + serviceDef.getServiceDescriptor().getName() + "] is implemented in class [" + serviceBeanDef.getName() + "]");
                 });
 
         try {
-            server = builder.build().start();
+        server = builder.build().start();
 
-            Thread thread = new Thread(() -> {
-                try {
-                    server.awaitTermination();
-                } catch (InterruptedException e) {
-                    LOG.error("gRPC server stopped unexpectedly: ", e);
-                }
-            });
-            thread.start();
+        Thread thread = new Thread(() -> {
+            try {
+                server.awaitTermination();
+            } catch (InterruptedException e) {
+                LOG.error("gRPC server stopped unexpectedly");
+            }
+        });
+        thread.start();
 
-            running.set(true);
-            LOG.info("gRPC server running on port: " + serverPort);
+        running.set(true);
+        LOG.info("gRPC server running on port: " + serverPort);
 
         } catch (IOException e) {
-            LOG.error("gRPC server cannot be started: ", e);
+            LOG.error("gRPC server cannot be started");
+            throw e;
         }
     }
 
