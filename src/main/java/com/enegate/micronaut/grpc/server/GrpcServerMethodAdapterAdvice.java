@@ -47,7 +47,7 @@ public class GrpcServerMethodAdapterAdvice {
 
     @EventListener
     @SuppressWarnings("unchecked")
-    public void onStartup(StartupEvent event) throws IOException {
+    public synchronized void onStartup(StartupEvent event) throws IOException {
         if (running.get()) return;
 
         BeanContext beanContext = event.getSource();
@@ -148,7 +148,7 @@ public class GrpcServerMethodAdapterAdvice {
     }
 
     @EventListener
-    public void onShutdown(ShutdownEvent event) {
+    public synchronized void onShutdown(ShutdownEvent event) {
         if (running.compareAndSet(true, false)) {
             try {
                 server.shutdown();
