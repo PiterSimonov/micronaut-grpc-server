@@ -35,9 +35,9 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Singleton
-public class GrpcServerMethodAdapterAdvice {
+public class GrpcServerLifecycleManager {
 
-    private static final Logger LOG = LoggerFactory.getLogger(GrpcServerMethodAdapterAdvice.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GrpcServerLifecycleManager.class);
 
     //TODO: Read from configuration file
     private int serverPort = 9090;
