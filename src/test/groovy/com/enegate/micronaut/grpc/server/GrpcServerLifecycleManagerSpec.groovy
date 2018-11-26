@@ -5,15 +5,12 @@ import spock.lang.Specification
 
 class GrpcServerLifecycleManagerSpec extends Specification {
 
-    void "test start/stop server"() {
-        given:
-        def grpcServerApplication = ApplicationContext.run(GrpcServerApplication,
-                ["micronaut.grpc.inprocess"    : "true",
-                 "micronaut.grpc.inprocessname": "aName"]
-        )
-
-        then:
-        println("Hello Test")
-    }
+//    void "test start/stop server"() {
+//        given:
+//        def grpcServerApplication = ApplicationContext.run(GrpcServerApplication,
+//                ["micronaut.grpc.inprocess"    : "true",
+//                 "micronaut.grpc.inprocessname": "aName"]
+//        )
+//    }
 
 }
