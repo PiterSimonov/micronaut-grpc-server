@@ -7,6 +7,8 @@ public class GrpcServerConfiguration {
     private int port = 8081;
     private boolean reflection = false;
     private boolean healthcheck = false;
+    private boolean inprocess = false;
+    private String inprocessname = "";
 
     public int getPort() {
         return port;
@@ -30,5 +32,21 @@ public class GrpcServerConfiguration {
 
     public void setHealthcheck(boolean healthcheck) {
         this.healthcheck = healthcheck;
+    }
+
+    public boolean isInprocess() {
+        return inprocess;
+    }
+
+    public void setInprocess(boolean inprocess) {
+        this.inprocess = inprocess;
+    }
+
+    public String getInprocessname() {
+        return inprocessname;
+    }
+
+    public void setInprocessname(String inprocessname) {
+        this.inprocessname = inprocessname;
     }
 }

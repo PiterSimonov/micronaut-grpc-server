@@ -1,10 +1,10 @@
 plugins {
+    id "java"
+    id "groovy"
     id "io.spring.dependency-management" version "1.0.6.RELEASE"
     id "net.ltgt.apt-eclipse" version "0.19"
     id "net.ltgt.apt-idea" version "0.19"
 }
-
-apply plugin:"java"
 
 repositories {
     mavenCentral()
@@ -17,13 +17,15 @@ dependencyManagement {
 }
 
 dependencies {
+    annotationProcessor "io.micronaut:micronaut-inject-java"
+    testAnnotationProcessor "io.micronaut:micronaut-inject-groovy"
+
     compile "io.micronaut:micronaut-runtime"
-
     compile "io.grpc:grpc-netty-shaded:1.16.1"
-
     compile "io.grpc:grpc-services:1.16.1"
 
-    annotationProcessor "io.micronaut:micronaut-inject-java"
+    testCompile "org.codehaus.groovy:groovy-all:2.5.4"
+    testCompile "org.spockframework:spock-core:1.2-groovy-2.5"
 
     runtime "ch.qos.logback:logback-classic:1.2.3"
 }
