@@ -29,8 +29,6 @@ dependencies {
 
 ### gRPC server
 
-#### Configuration
-
 #### Implementation
 Prerequisite: [Generate](https://github.com/google/protobuf-gradle-plugin) artifacts from your Protocol Buffer ``.proto`` definition files
 
@@ -62,6 +60,37 @@ public class GreeterService extends GreeterGrpc.GreeterImplBase {
         responseObserver.onCompleted();
     }
 }
+````
+
+#### Configuration
+
+##### Port
+The default port for the grpc server is ``8081``.
+
+If you want to change the port add the ``port`` property to your ``application.yml`` file
+
+````yaml
+micronaut:
+  grpc:
+    port: 9876
+````
+
+##### Reflection
+To enable the [reflection service](https://github.com/grpc/grpc-java/blob/master/services/src/main/proto/io/grpc/reflection/v1alpha/reflection.proto) add the ``reflection`` property to your ``application.yml`` file
+
+````yaml
+micronaut:
+  grpc:
+    reflection: true
+````
+
+##### Health check
+To enable the [health check service](https://github.com/grpc/grpc-java/blob/master/services/src/main/proto/grpc/health/v1/health.proto) add the ``healthcheck`` property to your ``application.yml`` file
+
+````yaml
+micronaut:
+  grpc:
+    healthcheck: true
 ````
 
 ### Interceptor
