@@ -22,8 +22,11 @@ import com.enegate.micronaut.grpc.server.configuration.GrpcServerConfiguration;
 import com.enegate.micronaut.grpc.server.event.GrpcServerShutdownEvent;
 import com.enegate.micronaut.grpc.server.event.GrpcServerStartupEvent;
 import io.grpc.*;
+import io.grpc.health.v1.HealthCheckResponse;
+import io.grpc.health.v1.HealthGrpc;
 import io.grpc.protobuf.services.ProtoReflectionService;
 import io.grpc.reflection.v1alpha.ServerReflectionGrpc;
+import io.grpc.services.HealthStatusManager;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.event.ShutdownEvent;
 import io.micronaut.context.event.StartupEvent;
@@ -45,31 +48,40 @@ public class GrpcServerLifecycleManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(GrpcServerLifecycleManager.class);
 
-    //TODO: Read from configuration file
     private GrpcServerConfiguration serverConfiguration;
     private ApplicationContext applicationContext;
+    private ServerBuilder serverBuilder;
     private final AtomicBoolean running = new AtomicBoolean();
     private Server server;
+    private HealthStatusManager healthStatusManager;
 
     @Inject
-    public GrpcServerLifecycleManager(GrpcServerConfiguration serverConfiguration, ApplicationContext applicationContext) {
+    public GrpcServerLifecycleManager(GrpcServerConfiguration serverConfiguration,
+                                      ApplicationContext applicationContext,
+                                      ServerBuilder serverBuilder) {
         this.serverConfiguration = serverConfiguration;
         this.applicationContext = applicationContext;
+        this.serverBuilder = serverBuilder;
     }
 
     @EventListener
     public synchronized void onStartup(StartupEvent event) throws IOException {
         if (running.get()) return;
 
-        ServerBuilder builder = ServerBuilder.forPort(serverConfiguration.getPort());
+        ArrayList<ServerInterceptor> globalInterceptors = findGlobalInterceptors();
 
-        addServices(builder);
-
-        if (serverConfiguration.isReflection()) {
-            addReflectionService(builder);
+        if (serverConfiguration.isHealthcheck()) {
+            healthStatusManager = new HealthStatusManager();
+            addHealthCheckService(serverBuilder);
         }
 
-        startServer(builder);
+        if (serverConfiguration.isReflection()) {
+            addReflectionService(serverBuilder);
+        }
+
+        addServices(serverBuilder, globalInterceptors);
+
+        startServer(serverBuilder);
     }
 
     private void startServer(ServerBuilder builder) throws IOException {
@@ -86,8 +98,8 @@ public class GrpcServerLifecycleManager {
             thread.start();
 
             running.set(true);
-            this.applicationContext.publishEvent(new GrpcServerStartupEvent(this));
             LOG.info("gRPC server running on port: " + serverConfiguration.getPort());
+            this.applicationContext.publishEvent(new GrpcServerStartupEvent(this));
 
         } catch (IOException e) {
             LOG.error("gRPC server cannot be started");
@@ -95,13 +107,17 @@ public class GrpcServerLifecycleManager {
         }
     }
 
+    private void addHealthCheckService(ServerBuilder builder) {
+        builder.addService(healthStatusManager.getHealthService());
+        LOG.debug("Adding gRPC service: " + HealthGrpc.getServiceDescriptor().getName());
+    }
+
     private void addReflectionService(ServerBuilder builder) {
         builder.addService(ProtoReflectionService.newInstance());
         LOG.debug("Adding gRPC service: " + ServerReflectionGrpc.getServiceDescriptor().getName());
     }
 
-    private void addServices(ServerBuilder builder) {
-        ArrayList<ServerInterceptor> globalInterceptors = findGlobalInterceptors();
+    private void addServices(ServerBuilder builder, ArrayList<ServerInterceptor> globalInterceptors) {
 
         applicationContext.getBeanDefinitions(BindableService.class).stream()
                 .filter(serviceBeanDef -> serviceBeanDef.hasAnnotation(GrpcService.class))
@@ -117,6 +133,12 @@ public class GrpcServerLifecycleManager {
 
                     //Add service
                     builder.addService(serviceDef);
+
+                    // Set health check status for service
+                    if (serverConfiguration.isHealthcheck()) {
+                        healthStatusManager.setStatus(serviceDef.getServiceDescriptor().getName(), HealthCheckResponse.ServingStatus.SERVING);
+                    }
+
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("Adding gRPC service: " + serviceDef.getServiceDescriptor().getName());
                         interceptors.forEach(si -> {
@@ -125,7 +147,6 @@ public class GrpcServerLifecycleManager {
                                 LOG.trace("gRPC interceptor [" + si.getClass().getSimpleName() + "] is implemented in class [" + si.getClass().getName() + "]");
                         });
                     }
-
                     if (LOG.isTraceEnabled())
                         LOG.trace("gRPC service [" + serviceDef.getServiceDescriptor().getName() + "] is implemented in class [" + serviceBeanDef.getName() + "]");
                 });
@@ -186,10 +207,12 @@ public class GrpcServerLifecycleManager {
     @EventListener
     public synchronized void onShutdown(ShutdownEvent event) {
         if (running.compareAndSet(true, false)) {
+            // Clear health check status for all registered services
+            server.getServices().forEach(service -> healthStatusManager.clearStatus(service.getServiceDescriptor().getName()));
             try {
                 server.shutdown();
-                applicationContext.publishEvent(new GrpcServerShutdownEvent(this));
                 LOG.info("gRPC server stopped");
+                applicationContext.publishEvent(new GrpcServerShutdownEvent(this));
             } catch (Throwable e) {
                 if (LOG.isErrorEnabled()) {
                     LOG.error("Error stopping gRPC server: " + e.getMessage(), e);

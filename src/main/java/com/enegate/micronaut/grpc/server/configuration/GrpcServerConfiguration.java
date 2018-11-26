@@ -6,6 +6,7 @@ import io.micronaut.context.annotation.ConfigurationProperties;
 public class GrpcServerConfiguration {
     private int port = 8081;
     private boolean reflection = false;
+    private boolean healthcheck = false;
 
     public int getPort() {
         return port;
@@ -21,5 +22,13 @@ public class GrpcServerConfiguration {
 
     public void setReflection(boolean reflection) {
         this.reflection = reflection;
+    }
+
+    public boolean isHealthcheck() {
+        return healthcheck;
+    }
+
+    public void setHealthcheck(boolean healthcheck) {
+        this.healthcheck = healthcheck;
     }
 }
