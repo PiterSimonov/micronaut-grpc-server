@@ -138,7 +138,7 @@ public class GlobalInterceptor implements ServerInterceptor {
 }
 ````
 
-##### ServerBuilder
+#### ServerBuilder
 To configure TLS etc.
 
 Annotate your interceptor implementation with ``@com.enegate.micronaut.grpc.server.annotation.GrpcInterceptor``
