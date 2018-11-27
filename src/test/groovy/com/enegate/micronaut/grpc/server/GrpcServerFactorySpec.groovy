@@ -2,7 +2,6 @@ package com.enegate.micronaut.grpc.server
 
 import io.grpc.ServerBuilder
 import io.grpc.inprocess.InProcessServerBuilder
-import io.micronaut.context.ApplicationContext
 import io.micronaut.context.DefaultApplicationContext
 import io.micronaut.context.env.PropertySource
 import io.micronaut.context.event.StartupEvent

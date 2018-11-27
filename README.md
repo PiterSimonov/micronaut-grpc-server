@@ -97,6 +97,7 @@ micronaut:
 
 #### Per Service
 Annotate your interceptor implementation with ``@com.enegate.micronaut.grpc.server.annotation.GrpcInterceptor``
+and implement Interface ``io.grpc.ServerInterceptor``
 
 ````java
 @GrpcInterceptor
@@ -123,7 +124,9 @@ public class GreeterService extends GreeterGrpc.GreeterImplBase {
 ````
 
 #### Global
-Annotate your interceptor implementation with ``@com.enegate.micronaut.grpc.server.annotation.GrpcInterceptor`` and set the ``global`` parameter to ``true``
+Annotate your interceptor implementation with ``@com.enegate.micronaut.grpc.server.annotation.GrpcInterceptor`` and set the ``global`` parameter to ``true``.
+
+Implement Interface ``io.grpc.ServerInterceptor``
 
 ````java
 @GrpcInterceptor(global = true)
@@ -133,6 +136,24 @@ public class GlobalInterceptor implements ServerInterceptor {
         return next.startCall(call, headers);
     }
 }
+````
+
+##### ServerBuilder
+To configure TLS etc.
+
+Annotate your interceptor implementation with ``@com.enegate.micronaut.grpc.server.annotation.GrpcInterceptor``
+and implement Interface ``com.enegate.micronaut.grpc.server.GrpcServerBuilderInterceptor``
+
+````java
+@GrpcInterceptor
+public class ExampleServerBuilderInterceptor implements GrpcServerBuilderInterceptor {
+    @Override
+    public void intercept(ServerBuilder serverBuilder) {
+        // Configure TLS
+        serverBuilder.useTransportSecurity(...);
+    }
+}
+
 ````
 
 ## Examples
