@@ -159,4 +159,4 @@ public class ExampleServerBuilderInterceptor implements GrpcServerBuilderInterce
 ## Examples
 
 - [micronaut-grpc-example](https://github.com/Enegate/micronaut-grpc-example) (Java)
-- [micronaut-grpc-example-kotlin]() (Kotlin)
+- [micronaut-grpc-example-kotlin](https://github.com/Enegate/micronaut-grpc-example-kotlin) (Kotlin)
