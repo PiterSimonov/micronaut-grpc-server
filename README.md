@@ -1,6 +1,6 @@
 # [gRPC](http://grpc.io) server support for [Micronaut](http://micronaut.io/) (HTTP/2)
 
-[![Build Status](https://travis-ci.org/Enegate/micronaut-grpc-server.svg?branch=master)](https://https://travis-ci.org/Enegate/micronaut-grpc-server)
+[![Build Status](https://travis-ci.org/Enegate/micronaut-grpc-server.svg?branch=master)](https://travis-ci.org/Enegate/micronaut-grpc-server)
 
 This project is inspired by the [Spring boot starter for gRPC](https://github.com/LogNet/grpc-spring-boot-starter) module and backed by the [Java gRPC implementation](https://github.com/grpc/grpc-java).
 
@@ -18,8 +18,8 @@ This project is inspired by the [Spring boot starter for gRPC](https://github.co
 #### Maven
 ````xml
 <dependency>
-  <groupId>TBD</groupId>
-  <artifactId>TBD</artifactId>
+  <groupId>com.enegate</groupId>
+  <artifactId>micronaut-grpc-server</artifactId>
   <version>TBD</version>
 </dependency>
 ````
@@ -27,7 +27,7 @@ This project is inspired by the [Spring boot starter for gRPC](https://github.co
 #### Gradle
 ````gradle
 dependencies {
-  compile 'TBD'
+  compile 'com.enegate:micronaut-grpc-server:TBD'
 }
 ````
 
