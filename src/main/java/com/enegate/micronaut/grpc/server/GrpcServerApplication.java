@@ -32,6 +32,8 @@ import javax.inject.Singleton;
 
  * An alternative {@link EmbeddedApplication} that gets activated for grpc server applications when
  * no other application is present.
+ *
+ * @author Steve Schneider
  */
 
 @Singleton

@@ -8,6 +8,10 @@ import io.micronaut.context.annotation.Requires;
 
 import javax.inject.Singleton;
 
+/**
+ * @author Steve Schneider
+ */
+
 @Factory
 public class GrpcServerFactory {
 

@@ -2,6 +2,10 @@ package com.enegate.micronaut.grpc.server.configuration;
 
 import io.micronaut.context.annotation.ConfigurationProperties;
 
+/**
+ * @author Steve Schneider
+ */
+
 @ConfigurationProperties("micronaut.grpc")
 public class GrpcServerConfiguration {
     private int port = 8081;

@@ -43,6 +43,10 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * @author Steve Schneider
+ */
+
 @Singleton
 public class GrpcServerLifecycleManager {
 

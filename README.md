@@ -6,7 +6,7 @@ This project is inspired by the [Spring boot starter for gRPC](https://github.co
 
 ## Features
 - Configures and runs the embedded gRPC server
-  - Reason: Micronaut does not support HTTP/2 at the moment?
+  - Reason: Micronaut does not support HTTP/2 at the moment
 - Global and per service interceptors
 - Custom ServerBuilder configuration
 - Fast startup time
