@@ -1,1 +1,3 @@
 rootProject.name = "micronaut-grpc-server"
+
+enableFeaturePreview('STABLE_PUBLISHING')

@@ -14,20 +14,21 @@ This project is inspired by the [Spring boot starter for gRPC](https://github.co
 ## Usage
 
 ### Dependencies
+Artifacts are published to Maven Central.
 
 #### Maven
 ````xml
 <dependency>
   <groupId>com.enegate</groupId>
   <artifactId>micronaut-grpc-server</artifactId>
-  <version>TBD</version>
+  <version>0.0.1</version>
 </dependency>
 ````
 
 #### Gradle
 ````gradle
 dependencies {
-  compile 'com.enegate:micronaut-grpc-server:TBD'
+  compile 'com.enegate:micronaut-grpc-server:0.0.1'
 }
 ````
 
